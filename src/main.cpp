@@ -17,9 +17,8 @@ PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[100];
 
-int cedula = 117541900;
-//int temp2 = 1;
-//int volts = 2;
+int card = 117541900;
+
 
 //*****************************
 //*** DECLARACION FUNCIONES ***
@@ -51,9 +50,9 @@ void loop()
     if (now - lastMsg > 3000)
     {
         lastMsg = now;
-        cedula++;
+        card++;
         
-        String to_send = "5e992a6806505c5262396ff0," + String(cedula) + "," + String(37);
+        String to_send = "5e992a6806505c5262396ff0," + String(card) + "," + String(37);
         to_send.toCharArray(msg, 100);
         Serial.print("Publicamos mensaje -> ");
         Serial.println(msg);
