@@ -121,6 +121,7 @@ void reconnect()
         if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass))
         {
             Serial.println("Conectado!");
+            digitalWrite(BUILTIN_LED, HIGH);
             // Nos suscribimos
             client.subscribe("led");
         }
