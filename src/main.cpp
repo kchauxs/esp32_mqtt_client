@@ -1,24 +1,23 @@
-
 #include <Arduino.h>
 #include <WiFi.h>
-#include <PubSubClient.h>  //segun la libreria se diseño para el esp8266, pero lo admite el esp32
+#include <PubSubClient.h>
 
 const char *ssid = "";
 const char *password = "";
 
-const char *mqtt_server = "";//http://broker.mqtt-dashboard.com/index.html
-const int mqtt_port = 1883;//TCP_URL
-const char *mqtt_user = "esp32_client";
-const char *mqtt_pass = "121212";
+const char *mqtt_server = "";
+const int mqtt_port = 1883;
+const char *mqtt_user = "";
+const char *mqtt_pass = "";
+
+const char *pub_topic = "";
+const char *sub_topic = "";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 long lastMsg = 0;
 char msg[100];
-
-int card = 117541900;
-
 
 //*****************************
 //*** DECLARACION FUNCIONES ***
@@ -30,7 +29,7 @@ void reconnect();
 void setup()
 {
     pinMode(BUILTIN_LED, OUTPUT);
-    Serial.begin(9600);
+    Serial.begin(115200);
     randomSeed(micros());
     setup_wifi();
     client.setServer(mqtt_server, mqtt_port);
@@ -50,13 +49,12 @@ void loop()
     if (now - lastMsg > 3000)
     {
         lastMsg = now;
-        card++;
-        
-        String to_send = "5e992a6806505c5262396ff0," + String(card) + "," + String(37);
+
+        String to_send = "on";
         to_send.toCharArray(msg, 100);
         Serial.print("Publicamos mensaje -> ");
         Serial.println(msg);
-        client.publish("porvenir", msg);
+        client.publish(pub_topic, msg);
     }
 }
 
@@ -102,7 +100,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     {
         digitalWrite(BUILTIN_LED, HIGH);
     }
-    else
+    if (incoming == "off")
     {
         digitalWrite(BUILTIN_LED, LOW);
     }
@@ -123,7 +121,7 @@ void reconnect()
             Serial.println("Conectado!");
             digitalWrite(BUILTIN_LED, HIGH);
             // Nos suscribimos
-            client.subscribe("led");
+            client.subscribe(sub_topic);
         }
         else
         {
