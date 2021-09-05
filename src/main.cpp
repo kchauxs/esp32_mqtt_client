@@ -95,7 +95,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     }
     incoming.trim();
     Serial.println("Mensaje -> " + incoming);
-
+    //Validamos los comandos
     if (incoming == "on")
     {
         digitalWrite(BUILTIN_LED, HIGH);
@@ -125,10 +125,9 @@ void reconnect()
         }
         else
         {
-            Serial.print("falló :( con error -> ");
+            Serial.print("Falló :( con error -> ");
             Serial.print(client.state());
             Serial.println(" Intentamos de nuevo en 5 segundos");
-
             delay(5000);
         }
     }
