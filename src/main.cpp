@@ -1,134 +1,84 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <ArduinoJson.h>
 #include <PubSubClient.h>
+#include <Pushbutton.h>
 
-const char *ssid = "";
-const char *password = "";
+#define PUBLISH_BUTTON 0
+#define LED 13
+#define MQTT_LED 2
 
-const char *mqtt_server = "";
-const int mqtt_port = 1883;
-const char *mqtt_user = "";
-const char *mqtt_pass = "";
+const char *wifissid = "";
+const char *WifiPassword = "";
+const char *mqttServer = "";
+const char *mqttUser = "";
+const char *mqttPassword = "";
+const char *publishTopic = "";
+const char *subscribeTopic = "";
 
-const char *pub_topic = "";
-const char *sub_topic = "";
+const int mqttPort = 1883;
+unsigned int intervalLogs = 3300;
+unsigned int intervalWifi = 20000;
+unsigned int intervalMqtt = 30000;
+unsigned long previousLogsMillis = 0;
+unsigned long previousMqttMillis = 0;
+unsigned long previousWifiMillis = 0;
+const short wifiConnectionAttempts = 30;
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+String lastReceivedMsg = "{}";
 
-long lastMsg = 0;
-char msg[100];
+WiFiClient wifiClient;
+PubSubClient mqttClient(wifiClient);
+Pushbutton publishPortal(PUBLISH_BUTTON);
 
-//*****************************
-//*** DECLARACION FUNCIONES ***
-//*****************************
-void setup_wifi();
+// functionsModule
+void logs();
+void pressPublishButton();
+void setOffSingle(int pin);
+void setOnSingle(int pin);
+float cpuTemperature();
+String getJsonDeviceStatus();
+// mqttModule
+bool getMqttConnection();
+void mqttCommands(String incoming);
+bool mqttConnect();
+String showMqttConnectionStatus();
 void callback(char *topic, byte *payload, unsigned int length);
-void reconnect();
+void mqttLoop();
+void publishData();
+// wifiModule
+void initWifi();
+void wifiLoop();
+bool checkWifiConnection();
+int getRSSIasQuality(int RSSI);
+String showWifiConnectionStatus();
+
+#include "functionsModule.hpp"
+#include "wifiModule.hpp"
+#include "mqttModule.hpp"
 
 void setup()
 {
-    pinMode(BUILTIN_LED, OUTPUT);
     Serial.begin(115200);
-    randomSeed(micros());
-    setup_wifi();
-    client.setServer(mqtt_server, mqtt_port);
-    client.setCallback(callback);
+    delay(500);
+
+    pinMode(LED, OUTPUT);
+    pinMode(MQTT_LED, OUTPUT);
+    pinMode(PUBLISH_BUTTON, INPUT);
+
+    mqttClient.setServer(mqttServer, mqttPort);
+    mqttClient.setCallback(callback);
+    delay(500);
+
+    initWifi();
+    delay(500);
 }
 
 void loop()
 {
-    if (!client.connected())
-    {
-        reconnect();
-    }
-
-    client.loop();
-
-    long now = millis();
-    if (now - lastMsg > 3000)
-    {
-        lastMsg = now;
-
-        String to_send = "on";
-        to_send.toCharArray(msg, 100);
-        Serial.print("Publicamos mensaje -> ");
-        Serial.println(msg);
-        client.publish(pub_topic, msg);
-    }
-}
-
-//*****************************
-//***    CONEXION WIFI      ***
-//*****************************
-void setup_wifi()
-{
-    delay(10);
-    // Nos conectamos a nuestra red Wifi
-    Serial.println();
-    Serial.print("Conectando a ");
-    Serial.println(ssid);
-
-    WiFi.begin(ssid, password);
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(".");
-    }
-
-    Serial.println("");
-    Serial.println("Conectado a red WiFi!");
-    Serial.println("Dirección IP: ");
-    Serial.println(WiFi.localIP());
-}
-
-void callback(char *topic, byte *payload, unsigned int length)
-{
-    String incoming = "";
-    Serial.print("Mensaje recibido desde -> ");
-    Serial.print(topic);
-    Serial.println("");
-    for (int i = 0; i < length; i++)
-    {
-        incoming += (char)payload[i];
-    }
-    incoming.trim();
-    Serial.println("Mensaje -> " + incoming);
-    //Validamos los comandos
-    if (incoming == "on")
-    {
-        digitalWrite(BUILTIN_LED, HIGH);
-    }
-    if (incoming == "off")
-    {
-        digitalWrite(BUILTIN_LED, LOW);
-    }
-}
-
-void reconnect()
-{
-
-    while (!client.connected())
-    {
-        Serial.print("Intentando conexión Mqtt...");
-        // Creamos un cliente ID
-        String clientId = "esp32_";
-        clientId += String(random(0xffff), HEX);
-        // Intentamos conectar
-        if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass))
-        {
-            Serial.println("Conectado!");
-            digitalWrite(BUILTIN_LED, HIGH);
-            // Nos suscribimos
-            client.subscribe(sub_topic);
-        }
-        else
-        {
-            Serial.print("Falló :( con error -> ");
-            Serial.print(client.state());
-            Serial.println(" Intentamos de nuevo en 5 segundos");
-            delay(5000);
-        }
-    }
+    yield();
+    wifiLoop();
+    mqttLoop();
+    pressPublishButton();
+    logs();
 }
