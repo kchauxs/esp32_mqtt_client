@@ -18,13 +18,13 @@ If your Mqtt server doesn't ask for username or password, you can leave the spac
 
 ## How does it work
 
-- If the device exceeds the number of wifi connection attempts `wifiConnectionAttempts = 30`, it will continue to work and try to connect every 20 seconds `wifiLoop()`.
+- If the device exceeds the number of wifi connection attempts `wifiConnectionAttempts = 30`, it will continue to work and try to connect every 20 seconds `wifi Loop()`.
 
-- If the device loses connection to the Mqtt server, it will try to reconnect every 30 seconds `unsigned int intervalMqtt = 30000`.
+- If the device loses connection to the Mqtt server, it will try to connect every 30 seconds `unsigned int intervalMqtt = 30000`.
 
-- When the `#define PUBLISH_BUTTON 0` button is pressed, it sends to the server the name of the network `wifiSSID`, the channel `wifiChannel`, the received signal strength indicator `wifiDbm`, the percentage of the connection quality `wifiPercent` and the internal temperature of the cpu `tempCpu`.
+- When the `#define PUBLISH_BUTTON 0` button is pressed, it sends the server the network name `wifiSSID`, the channel `wifiChannel`, the received signal strength indicator `wifiDbm`, the connection quality percentage `wifiPercent ` and the internal temperature of the cpu `tempCpu`.
 
-- Through an Mqtt client you can turn on or off a `#define MQTT_LED 2` led as shown in the following example.
+- A través de un cliente Mqtt, encienda o apague el led `#define MQTT_LED 2` como se muestra en los ejemplos.
 
 
 ## Example of subscription and publication:
