@@ -15,8 +15,8 @@ const char *mqttUser = "";
 const char *mqttPassword = "";
 const char *publishTopic = "";
 const char *subscribeTopic = "";
-
 const int mqttPort = 1883;
+
 unsigned int intervalLogs = 3300;
 unsigned int intervalWifi = 20000;
 unsigned int intervalMqtt = 30000;
